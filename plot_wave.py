@@ -1,39 +1,37 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# === Chargement des données ===
 output_base = "test.out"
-
 
 data_f = np.loadtxt(output_base + "_f")
 times = data_f[:, 0]
 fx = data_f[:, 1:]
 
-
 data_en = np.loadtxt(output_base + "_en")
 t_en = data_en[:, 0]
 E = data_en[:, 1]
 
-
 x = np.loadtxt(output_base + "_x")
 
-
-plt.figure(figsize=(10, 5))
-for i in range(0, len(times), max(1, len(times)//10)):
-    plt.plot(x, fx[i], label=f't = {times[i]:.2f}')
-plt.title("f(x,t) à différents instants")
+# === Heatmap (f(x, t)) ===
+plt.figure(figsize=(10, 6))
+extent = [x[0], x[-1], times[-1], times[0]]  # y inversé pour que t=0 soit en haut
+plt.imshow(fx, extent=extent, aspect='auto', cmap='inferno', origin='upper')
+plt.colorbar(label="Amplitude f(x,t)")
+plt.title("Amplitude de l'onde f(x,t) en fonction du temps et de l'espace")
 plt.xlabel("x")
-plt.ylabel("f(x)")
-plt.legend()
-plt.grid()
+plt.ylabel("temps t")
 plt.tight_layout()
 plt.show()
 
-plt.figure()
-plt.plot(t_en, E)
-plt.title("Énergie E(t)")
+# === Tracé de l'énergie E(t) ===
+plt.figure(figsize=(8, 4))
+plt.plot(t_en, E, label="E(t)")
+plt.title("Énergie totale du système")
 plt.xlabel("temps t")
 plt.ylabel("E(t)")
 plt.grid()
 plt.tight_layout()
 plt.show()
+
