@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use("MacOSX")
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -28,7 +30,8 @@ def update(frame):
     time_text.set_text(f"t = {times[frame]:.3f} s")
     return line, time_text
 
-ani = animation.FuncAnimation(fig, update, frames=len(times), interval=50, blit=True)
+ani = animation.FuncAnimation(fig, update, frames=len(times), interval=15, blit=True)
+ani.save("anim.gif", fps=26)
 plt.tight_layout()
 plt.show()
 

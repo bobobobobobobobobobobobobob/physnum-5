@@ -29,7 +29,7 @@ void boundary_condition(vector<double> &fnext, vector<double> &fnow, double cons
       }else if(bc_l == "libre"){
         fnext[0] = fnext[1]; // TODO : Modifier pour imposer la condition au bord gauche libre
       }else if (bc_l =="sortie"){
-        fnext[0] = fnow[1] + ((sqrt(beta2[0]) - 1.0) / (sqrt(beta2[0]) + 1.0)) * (fnext[1] - fnow[0]);
+        fnext[0] = fnow[0] + sqrt(beta2[0])*(fnow[1]-fnow[0]);
       }else if (bc_l == "excitation"){
         fnext[0] = A * sin(om * t); // TODO : Modifier pour imposer la condition au bord gauche sinusoidale
       }else{
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
   {
     fpast[i] = 0.;
     fnow[i]  = 0.;
-    beta2[i] = (CFL * CFL) * vel2[i] * (dt * dt) / (dx * dx); // TODO: Modifier pour calculer beta^2 aux points de maillage
+    beta2[i] = CFL * vel2[i] * (dt * dt) / (dx * dx); // TODO: Modifier pour calculer beta^2 aux points de maillage
 
     fnow[i]  = finit(x[i], n_init,  L, f_hat, x1, x2, initialization);
 
@@ -217,10 +217,11 @@ int main(int argc, char* argv[])
       fpast[i] = fnow[i];; // TODO: system is at rest for t<=0, 
     }
     else if(initial_state =="right"){ 
-      fpast[i] = fnow[i] - dt * 0.5 * sqrt(vel2[i]) * (fnow[min(i+1,N-1)] - fnow[max(i-1,0)]) / dx; // TODO: propagation to the right
+       fpast[i] = finit(x[i] + sqrt(vel2[i])*dt, n_init, L, f_hat, x1, x2, initialization); // TODO: propagation to the right
     }
     else if(initial_state =="left"){
-      fpast[i] = fpast[i] = fnow[i] + dt * 0.5 * sqrt(vel2[i]) * (fnow[min(i+1,N-1)] - fnow[max(i-1,0)]) / dx; // TODO: propagation to the left
+      fpast[i] = finit(x[i] - sqrt(vel2[i])*dt, n_init, L, f_hat, x1, x2, initialization); // TODO: propagation to the left
+
     }
   }
 
@@ -245,18 +246,18 @@ int main(int argc, char* argv[])
     {
       if (equation_type == "A"){ 
         fnext[i] = 2.0*(1-beta2[i])*(fnow[i]) - fpast[i] + beta2[i] * (fnow[i+1] + fnow[i-1]);
-        }
+      }
       else if (equation_type == "B"){ // Equation B
-      double df_gauche = (fnow[i] - fnow[i-1]) / dx;
-      double df_droite = (fnow[i+1] - fnow[i]) / dx;
-      fnext[i] = 2.0 * fnow[i] - fpast[i] + dt * dt * (vel2[i+1] * df_droite - vel2[i-1] * df_gauche) / dx;
-    }
-    else if (equation_type == "C"){ // Equation C
-    double terme_gauche= vel2[i-1] * fnow[i-1];
-    double terme_milieu  = vel2[i] * fnow[i];
-    double terme_droite= vel2[i+1] * fnow[i+1];
-    fnext[i] = 2.0 * fnow[i] - fpast[i] + (dt * dt / (dx * dx)) * (terme_droite- 2.0 * terme_milieu + terme_gauche);
-}
+        double df_gauche = (fnow[i] - fnow[i-1]) / dx;
+        double df_droite = (fnow[i+1] - fnow[i]) / dx;
+        fnext[i] = 2.0 * fnow[i] - fpast[i] + dt * dt * (vel2[i+1] * df_droite - vel2[i-1] * df_gauche) / dx;
+      }
+      else if (equation_type == "C"){ // Equation C
+        double terme_gauche= vel2[i-1] * fnow[i-1];
+        double terme_milieu  = vel2[i] * fnow[i];
+        double terme_droite= vel2[i+1] * fnow[i+1];
+        fnext[i] = 2.0 * fnow[i] - fpast[i] + (dt * dt / (dx * dx)) * (terme_droite- 2.0 * terme_milieu + terme_gauche);
+      }
     }
 
     // Impose boundary conditions
