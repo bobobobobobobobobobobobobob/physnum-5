@@ -1,3 +1,5 @@
 a.out
 test.*
 physnum5
+.DS_Store
+.vscode/

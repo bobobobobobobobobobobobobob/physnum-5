@@ -1,6 +1,6 @@
 % Physique :
-cb_gauche=sortie %! fixe, libre, sortie, excitation
-cb_droite=libre  %! fixe, libre, sortie, excitation
+cb_gauche=libre %! fixe, libre, sortie, excitation
+cb_droite=fixe  %! fixe, libre, sortie, excitation
 v_uniform = true
 
 A=0.1
@@ -8,15 +8,15 @@ f_hat = 1.0
 x1=3.0
 x2=8.0
 
-tfin=1.5
+tfin=10
 equation_type=B ! A, B, C
 nx=350
 n_init=3 ! numéro du mode propre à initialiser
 
 %initialization=mode ! mode, autre
-initialization=autre
+initialization=mode
 
-initial_state=left ! right, left, static
+initial_state=static ! right, left, static
 
 CFL=1.0
 nsteps=40

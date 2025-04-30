@@ -58,7 +58,8 @@ double finit(double x, double n_init, double L, double f_hat, double x1, double 
 
 if(initialization=="mode"){
   // TODO: initialiser la fonction f(x,t=0) selon un mode propre
-  finit_ = 0.0;
+  double k = PI * (0.5 + n_init) / L;
+  finit_ = f_hat * cos(k*x);
 }
 else{
   // TODO: initialiser la fonction f(x,t=0) selon la donnée du problème
