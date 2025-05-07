@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
   {
     fpast[i] = 0.;
     fnow[i]  = 0.;
-    beta2[i] = CFL * vel2[i] * (dt * dt) / (dx * dx); // TODO: Modifier pour calculer beta^2 aux points de maillage
+    beta2[i] = vel2[i] * (dt * dt) / (dx * dx); // TODO: Modifier pour calculer beta^2 aux points de maillage
 
     fnow[i]  = finit(x[i], n_init,  L, f_hat, x1, x2, initialization);
 
@@ -249,15 +249,21 @@ int main(int argc, char* argv[])
         fnext[i] = 2.0*(1-beta2[i])*(fnow[i]) - fpast[i] + beta2[i] * (fnow[i+1] + fnow[i-1]);
       }
       else if (equation_type == "B"){ // Equation B
-        double df_gauche = (fnow[i] - fnow[i-1]) / dx;
-        double df_droite = (fnow[i+1] - fnow[i]) / dx;
-        fnext[i] = 2.0 * fnow[i] - fpast[i] + dt * dt * (vel2[i+1] * df_droite - vel2[i-1] * df_gauche) / dx;
+        //double df_gauche = (fnow[i] - fnow[i-1]) / dx;
+        //double df_droite = (fnow[i+1] - fnow[i]) / dx;
+        //fnext[i]=2*(1-beta2[i])*fnow[i]-fpast[i]+pow(dt/dx,2)*(vel2[i+1]*fnow[i+1]-vel2[i-1]*fnow[i-1]);
+        // fnext[i] = 2.0 * fnow[i] - fpast[i] + dt * dt * (vel2[i+1] * df_droite - vel2[i-1] * df_gauche) / dx;
+        double ua=vel2[i+1]-vel2[i-1]+4*vel2[i];
+        double ub=vel2[i-1]-vel2[i+1]+4*vel2[i];
+        fnext[i]=2*(1-beta2[i])*fnow[i]-fpast[i]+pow(dt/(2*dx),2)*( fnow[i+1]*ua+fnow[i-1]*ub);
       }
       else if (equation_type == "C"){ // Equation C
         double terme_gauche= vel2[i-1] * fnow[i-1];
         double terme_milieu  = vel2[i] * fnow[i];
         double terme_droite= vel2[i+1] * fnow[i+1];
         fnext[i] = 2.0 * fnow[i] - fpast[i] + (dt * dt / (dx * dx)) * (terme_droite- 2.0 * terme_milieu + terme_gauche);
+        //fnext[i]=2*(1-beta2[i])*fnow[i]-fpast[i]+pow(dt/dx,2)*(vel2[i+1]*fnow[i+1]-vel2[i-1]*fnow[i-1]);
+
       }
     }
 
