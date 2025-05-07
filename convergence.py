@@ -23,7 +23,7 @@ output_base = "test.out"
 
 
 
-g  = 9.81;
+g  = 9.81
 f_hat = 1.0
 L=15
 tfin=10
@@ -38,18 +38,17 @@ u = np.sqrt(h00*g)
 omega_n = (0.5+n_init) * np.pi * u/L
 Tn = 2*np.pi/omega_n
 tfin = Tn
-nsteps=int(u*tfin/(L/nx)+100)
+nsteps=int(u*tfin/(L/nx)+1)
 
-paramstr="nx"
-nsimul=20
-param = np.arange(1, nsimul+1) * nx
-
+paramstr="nsteps"
+nsimul=150
+param = np.arange(1, nsimul+1) * nsteps
+param2 = np.arange(1, nsimul+1) * nx
 
 
 def _simulate(idx):
     output = f"{output_base}_{idx}"
-    cmd = f"{repertoire}{executable} {input_filename} impose_nsteps=true tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} nsteps={nsteps} nx={nx} n_init={n_init} {paramstr}={param[idx]} output={output}"
-    print(cmd)
+    cmd = f"{repertoire}{executable} {input_filename} impose_nsteps=true tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} nsteps={param[idx]} nx={param2[idx]} n_init={n_init} output={output}"
     subprocess.run(cmd, shell=True)
     data_f = np.loadtxt(output + "_f")
     times = data_f[:, 0]
@@ -61,6 +60,7 @@ def _simulate(idx):
     p_fx = f_hat * np.cos(omega_n * p_t) * np.cos(p_x * omega_n / u)
     
     dx = L/(fx.shape[1]-1)
+    #print(f"{output}: CFL={u*(tfin/param[idx])/(L/param2[idx])} norm:{np.linalg.norm(fx[-1,:]-p_fx[-1,:])} dx:{dx}")
     error = np.sum(np.abs(fx[-1,:] - p_fx[-1,:]))*dx
 
 
@@ -72,8 +72,11 @@ errors = np.zeros(nsimul)
 
 def plot():
     plt.figure()
-    plt.plot(errors)
-    plt.show()
+    plt.scatter(np.arange(1, nsimul+1), errors)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.savefig("conv.svg", bbox_inches="tight")
+    # plt.show()
 
 if __name__ == '__main__':
     batch_size = 10
@@ -81,6 +84,6 @@ if __name__ == '__main__':
         with Pool(processes=batch_size) as pool:
             results = pool.map(_simulate, range(nbatch, min(nsimul, nbatch + batch_size)))
             for i, res in enumerate(results):
-                errors[nbatch + 1] = results[0]
+                errors[nbatch + i] = res
     plot()
 
