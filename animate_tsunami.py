@@ -23,11 +23,11 @@ output_base = "test.out"
 
 g  = 9.81;
 f_hat = 1.0
-L=10
-tfin=10
-nx=50
+L=1000 * 1000
+tfin=12000
+nx=2000
 n_init=4
-CFL = 1.00088
+CFL = 0.99
 h00= 4.0
 initialization="autre"
 
@@ -35,10 +35,10 @@ initialization="autre"
 #omega_n = (0.5+n_init) * np.pi * u/L
 #Tn = 2*np.pi/omega_n
 
-#tfin = Tn
+#tfin = 
 
 
-cmd = f"{repertoire}{executable} {input_filename} tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} nx={nx} n_init={n_init} output={output_base}"
+cmd = f"{repertoire}{executable} {input_filename} v_uniform=false tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} x1=50000 x2=350000 nx={nx} n_init={n_init} output={output_base}"
 subprocess.run(cmd, shell=True)
 
 
@@ -74,24 +74,68 @@ def update(frame):
     #return line, p_line, time_text
     return line, time_text
 
-
 ani = animation.FuncAnimation(fig, update, frames=len(times), interval=15, blit=True)
 plt.tight_layout()
+#ani.save("tsunami.gif", fps=30)
 
-mxi = np.argmax(fx)
-print(mxi//fx.shape[1], mxi%fx.shape[1])
+
+wave_height = np.max(fx, axis=0)
+wave_x = x
+wave_t = np.zeros_like(x)
+#mask = (0.2 <= wave_x) & (wave_x < (1-0.03)*1e6)
+k=2*2
+fit_range=50
+for i in np.arange(0,x.size):
+    t_idx = np.argmax(fx[:,i])
+    mask = np.arange(max(0, t_idx-fit_range),min(fx.shape[0],t_idx+fit_range+1))
+    f_fit = fx[mask,i]
+    t_fit = times[mask]
+    fit = np.polyfit(t_fit, f_fit, 2)
+    wave_t[i] = -fit[1]/(2*fit[0])
+    #wave_t[i] = np.mean(t_fit)
+    if i == 1000:
+        plt.figure()
+        plt.plot(t_fit, f_fit)
+        plt.plot(t_fit, fit[0]*(t_fit**2) + fit[1]*(t_fit) + fit[2], label="fit")
+        plt.legend()
+
+
+
+#print(wave_t[x.size//2: x.size//2 + 10])
+plt.figure()
+plt.scatter(wave_x, wave_height, s=4)
+plt.xlabel("Position [m]")
+plt.ylabel("Hauteur [m]")
+plt.savefig("wave_height.svg", bbox_inches="tight")
+
+diff_x = wave_x[k:] - wave_x[:-k]
+diff_t = wave_t[k:] - wave_t[:-k]
+v = diff_x / diff_t
+
+#print((wave_x[k:-k]).size, v.size)
+
+plt.figure()
+pltx = wave_x[int(k/2):-int(k/2)]
+mask = (0.2*1e6 < pltx)
+plt.scatter(pltx[mask], v[mask], s=4)
+plt.xlabel("Position [m]")
+plt.ylabel("Vitesse [m/s]")
+plt.savefig("wave_spd.svg", bbox_inches="tight")
+
 
 plt.figure()
 #mp = plt.imshow(fx, cmap='hot', extent=(0,L,tfin,0),norm=matplotlib.colors.LogNorm())
-mp = plt.imshow(fx, cmap='hot', extent=(0,L,tfin,0))
+mp = plt.imshow(fx[::-1,], cmap='hot', extent=(0,L,0,tfin), aspect="auto")
 plt.colorbar(mp, location='right', label="Hauteur [m]")
 plt.xlabel("Position [m]")
 plt.ylabel("Temps [s]")
-plt.savefig("heatmappp.svg")
+plt.savefig("tsunami_hm.svg", bbox_inches="tight")
+
+
 
 # Pour CFL>1
 if CFL>1:
-    x_idx = 10
+    x_idx = 128
     plt.figure()
     plt.plot(times, fx[:,x_idx])
     plt.xlabel("Temps [s]")

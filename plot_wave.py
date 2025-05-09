@@ -23,7 +23,7 @@ plt.title("Amplitude de l'onde f(x,t) en fonction du temps et de l'espace")
 plt.xlabel("x")
 plt.ylabel("temps t")
 plt.tight_layout()
-plt.show()
+plt.savefig("heatmap_b.svg", bbox_inches="tight")
 
 # === Tracé de l'énergie E(t) ===
 plt.figure(figsize=(8, 4))
@@ -33,5 +33,4 @@ plt.xlabel("temps t")
 plt.ylabel("E(t)")
 plt.grid()
 plt.tight_layout()
-plt.show()
 
