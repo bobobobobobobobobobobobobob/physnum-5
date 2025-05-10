@@ -30,6 +30,24 @@ n_init=4
 CFL = 0.99
 h00= 4.0
 initialization="autre"
+equation_type="C"
+
+hL=8000.0
+hR=20.0
+xa=450e3
+xb=950e3
+def h0(x_):
+    if(type(x_) is float):
+        x_ = np.array([x_])
+        print(x_)
+    out = np.zeros_like(x_)
+    out[x_ <= xa] = hL
+    out[x_ >= xb] = hR
+    for i in range(out.size):
+        if not xa < x_[i] < xb:
+            continue
+        out[i] = 0.5*(hL+hR)+0.5*(hL-hR)*np.cos(np.pi*(x_[i]-xa)/(xb-xa))
+    return out
 
 #u = np.sqrt(h00*g)
 #omega_n = (0.5+n_init) * np.pi * u/L
@@ -38,7 +56,7 @@ initialization="autre"
 #tfin = 
 
 
-cmd = f"{repertoire}{executable} {input_filename} v_uniform=false tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} x1=50000 x2=350000 nx={nx} n_init={n_init} output={output_base}"
+cmd = f"{repertoire}{executable} {input_filename} equation_type={equation_type} v_uniform=false tfin={tfin} f_hat={f_hat} h00={h00} CFL={CFL} initialization={initialization} L={L} tfin={tfin} x1=50000 x2=350000 nx={nx} n_init={n_init} hL={hL} hR={hR} xa={xa} xb={xb} output={output_base}"
 subprocess.run(cmd, shell=True)
 
 
@@ -103,9 +121,21 @@ for i in np.arange(0,x.size):
 
 #print(wave_t[x.size//2: x.size//2 + 10])
 plt.figure()
-plt.scatter(wave_x, wave_height, s=4)
+plt.scatter(wave_x, wave_height, s=4,label="Simulation")
+# WKB
+x_init_idx = np.argmax(wave_x>0.2*1e6)
+x_init = float(wave_x[x_init_idx])
+u = np.sqrt(g*h0(wave_x))
+if(equation_type=="B"):
+    wkb_A = (np.sqrt(u)[x_init_idx] * fx[0,x_init_idx] / np.sqrt(u))
+elif(equation_type=="A"):
+    wkb_A =  (fx[0,x_init_idx]/np.sqrt(u)[x_init_idx])*np.sqrt(u)
+elif(equation_type=="C"):
+    wkb_A = ((u[x_init_idx]**1.5) * fx[0,x_init_idx]) / (u**1.5)
+plt.scatter(wave_x, wkb_A,s=4,label="Solution WKB")
 plt.xlabel("Position [m]")
 plt.ylabel("Hauteur [m]")
+plt.legend()
 plt.savefig("wave_height.svg", bbox_inches="tight")
 
 diff_x = wave_x[k:] - wave_x[:-k]
@@ -117,9 +147,11 @@ v = diff_x / diff_t
 plt.figure()
 pltx = wave_x[int(k/2):-int(k/2)]
 mask = (0.2*1e6 < pltx)
-plt.scatter(pltx[mask], v[mask], s=4)
+plt.scatter(pltx[mask], v[mask], s=4,label="Simulation")
+plt.scatter(pltx[mask], np.sqrt(g*h0(pltx[mask])),s=4,label="Solution WKB") 
 plt.xlabel("Position [m]")
 plt.ylabel("Vitesse [m/s]")
+plt.legend()
 plt.savefig("wave_spd.svg", bbox_inches="tight")
 
 
