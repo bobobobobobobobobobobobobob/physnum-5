@@ -32,6 +32,8 @@ void boundary_condition(vector<double> &fnext, vector<double> &fnow, double cons
         fnext[0] = fnow[0] + sqrt(beta2[0])*(fnow[1]-fnow[0]);
       }else if (bc_l == "excitation"){
         fnext[0] = A * sin(om * t); // TODO : Modifier pour imposer la condition au bord gauche sinusoidale
+        }else if (bc_l == "periodique"){
+         fnext[0] = fnext[N-1];
       }else{
         cerr << "Merci de choisir une condition aux bord gauche valide" << endl;
       }
@@ -42,10 +44,12 @@ void boundary_condition(vector<double> &fnext, vector<double> &fnow, double cons
       }else if(bc_r == "libre"){
         fnext[N-1] = fnext[N-2]; // TODO : Modifier pour imposer la condition au bord droit libre
       }else if (bc_r =="sortie"){
-        fnext[N-1] = fnow[N-2] + ((sqrt(beta2[N-1]) - 1.0) / (sqrt(beta2[N-1]) + 1.0)) * (fnext[N-2] - fnow[N-1]);
+        fnext[N-1] = fnow[N-1] + sqrt(beta2[N-1]) * (fnow[N-2] - fnow[N-1]);
+        }else if (bc_r == "excitation"){ 
+        fnext[N-1] = A * sin(om * t); 
          // TODO : Modifier pour imposer la condition au bord droit "sortie de l'onde"
-      }else if (bc_r == "excitation"){ 
-        fnext[N-1] = A * sin(om * t); // TODO : Modifier pour imposer la condition au bord droit sinusoidale
+       }else if (bc_r == "periodique"){
+         fnext[N-1] = fnext[0];
       }else{
         cerr << "Merci de choisir une condition aux bord droit valide" << endl;
       }
