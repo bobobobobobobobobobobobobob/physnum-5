@@ -30,7 +30,7 @@ n_init=4
 CFL = 0.99
 h00= 4.0
 initialization="autre"
-equation_type="C"
+equation_type="B"
 
 hL=8000.0
 hR=20.0
@@ -110,6 +110,7 @@ for i in np.arange(0,x.size):
     t_fit = times[mask]
     fit = np.polyfit(t_fit, f_fit, 2)
     wave_t[i] = -fit[1]/(2*fit[0])
+    wave_height[i] = fit[2]-(fit[1]**2)/(4*fit[0])
     #wave_t[i] = np.mean(t_fit)
     if i == 1000:
         plt.figure()
@@ -121,7 +122,8 @@ for i in np.arange(0,x.size):
 
 #print(wave_t[x.size//2: x.size//2 + 10])
 plt.figure()
-plt.scatter(wave_x, wave_height, s=4,label="Simulation")
+mask = (wave_x>2e5)
+plt.scatter(wave_x[mask], wave_height[mask], s=4,label="Simulation")
 # WKB
 x_init_idx = np.argmax(wave_x>0.2*1e6)
 x_init = float(wave_x[x_init_idx])
@@ -132,7 +134,7 @@ elif(equation_type=="A"):
     wkb_A =  (fx[0,x_init_idx]/np.sqrt(u)[x_init_idx])*np.sqrt(u)
 elif(equation_type=="C"):
     wkb_A = ((u[x_init_idx]**1.5) * fx[0,x_init_idx]) / (u**1.5)
-plt.scatter(wave_x, wkb_A,s=4,label="Solution WKB")
+plt.scatter(wave_x[mask], wkb_A[mask],s=4,label="Solution WKB")
 plt.xlabel("Position [m]")
 plt.ylabel("Hauteur [m]")
 plt.legend()
